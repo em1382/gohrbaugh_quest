@@ -10,9 +10,9 @@
 :- dynamic turned_off/1.
 :- dynamic turned_on/1.
 
-start:- nani_search.       % main entry point
+start:- gohrbaugh_quest.       % main entry point
 
-nani_search:-
+gohrbaugh_quest:-
   init_dynamic_facts,     % predicates which are not compiled
 
   write('Gohrbaugh Quest: The Battle for the Department Chair'),nl,
@@ -126,6 +126,7 @@ room(kitchen).
 room('dining room').
 room(hall).
 room(cellar).
+room(outside).
 
 door(office,hall).
 door(hall,'dining room').
@@ -133,6 +134,7 @@ door('dining room',kitchen).
 door(kitchen,cellar).
 door(kitchen,office).
 door(lottie, 'eisenhower upper hallway').
+door('eisenhower upper hallway', 'outside').
 
 connect(X,Y):-
   door(X,Y).
@@ -210,6 +212,12 @@ list_connections(Place):-
   tab(2),write(X),nl,
   fail.
 list_connections(_).
+
+list_characters(Character):-
+  location(X,Character),
+  tab(2),write(Character),nl,
+  fail.
+list_characters(_).
 
 % look_in allows the player to look inside a thing which might
 % contain other things
