@@ -20,27 +20,24 @@ nani_search:-
   write('No rights reserved, use it as you wish'),nl,
   nl,
   write('The year is 2153.'),nl,
-  write('As such, it might be the simplest adventure game.  The game'),nl,
-  write('is the primary example used in this tutorial.'),nl,
-  write('Full source is included as well.'),nl,
+  write('Our story takes place at Messiah College'),nl,
+  write('In the current year, the department chair is not limited like it is today'),nl,
+  write('Instead, one department chair is appointed for life'),nl,
   nl,
-  write('Your persona as the adventurer is that of a three year'),nl,
-  write('old.  The Nani is your security blanket.  It is getting'),nl,
-  write('late and you''re tired, but you can''t go to sleep'),nl,
-  write('without your Nani.  Your mission is to find the Nani.'),nl,
+  write('Currently, the evil Dr. Wcott Seaver'),nl,
+  write('and his army of PHP-powered robots have complete control of the department,'),nl,
+  write('and he has just passed a movement banning all non-web development classes from the department'),nl,
   nl,
-  write('You control the game by using simple English commands'),nl,
-  write('expressing the action you wish to take.  You can go to'),nl,
-  write('other rooms, look at your surroundings, look in things'),nl,
-  write('take things, drop things, eat things, inventory the'),nl,
-  write('things you have, and turn things on and off.'),nl,
+  write('You are Rene Gohrbaugh, a retired department chair'),nl,
+  write('You must do everything in your power to stop the theory-disregarding menace!'),nl,
+  write('You decided to go to Lottie for lunch the day you decided something must be done,'),nl,
+  write('and this is where our story begins'),nl,
   nl,
   write('Hit any key to continue.'),get0(_),
   write('Type "help" if you need more help on mechanics.'),nl,
   write('Type "hint" if you want a big hint.'),nl,
   write('Type "quit" if you give up.'),nl,
   nl,
-  write('Enjoy the hunt.'),nl,
 
   look,                   % give a look before starting the game
   command_loop.
@@ -135,7 +132,6 @@ door(hall,'dining room').
 door('dining room',kitchen).
 door(kitchen,cellar).
 door(kitchen,office).
-door(kitchen, lottie).
 door(lottie, 'eisenhower upper hallway').
 
 connect(X,Y):-
@@ -158,7 +154,7 @@ init_dynamic_facts:-
   assertz(location(table,kitchen)),
   assertz(location(crackers,desk)),
   assertz(location(broccoli,kitchen)),
-  assertz(here(kitchen)),
+  assertz(here(lottie)),
   assertz(turned_off(flashlight)).
 
 furniture(buffet).
