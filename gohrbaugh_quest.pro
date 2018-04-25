@@ -26,7 +26,8 @@ gohrbaugh_quest:-
   nl,
   write('Currently, the evil Dr. Wcott Seaver'),nl,
   write('and his army of PHP-powered robots have complete control of the department,'),nl,
-  write('and he has just passed a movement banning all non-web development classes from the department'),nl,
+  write('and he has just passed a movement banning all non-web development classes'),nl,
+  write('from the department'),nl,
   nl,
   write('You are Rene Gohrbaugh, a retired department chair'),nl,
   write('You must do everything in your power to stop the theory-disregarding menace!'),nl,
@@ -70,6 +71,7 @@ do(look):-look,!.
 do(turn_on(X)):-turn_on(X),!.
 do(turn_off(X)):-turn_off(X),!.
 do(look_in(X)):-look_in(X),!.
+do(talk_to(X)):-talk_to(X),!.
 do(quit):-quit,!.
 
 % These are the predicates which control exit from the game.  If
@@ -109,10 +111,7 @@ nshelp:-
   look.
 
 hint:-
-  write('You need to get to the cellar, and you can''t unless'),nl,
-  write('you get some light.  You can''t turn on the cellar'),nl,
-  write('light, but there is a flash light in the desk in the'),nl,
-  write('office you might use.'),nl,nl,
+  write('No hints for you, buddy!'),nl,nl,
   look.
 
 % Initial facts describing the world.  Rooms and doors do not change,
@@ -121,18 +120,6 @@ hint:-
 room(lottie).
 room('eisenhower upper hallway').
 
-room(office).
-room(kitchen).
-room('dining room').
-room(hall).
-room(cellar).
-room(outside).
-
-door(office,hall).
-door(hall,'dining room').
-door('dining room',kitchen).
-door(kitchen,cellar).
-door(kitchen,office).
 door(lottie, 'eisenhower upper hallway').
 door('eisenhower upper hallway', 'outside').
 
@@ -143,32 +130,27 @@ connect(X,Y):-
 
 % These facts are all subject to change during the game, so rather
 % than being compiled, they are "asserted" to the listener at
-% run time.  This predicate is called when "nanisrch" starts up.
+% run time.  This predicate is called when "gohrbaugh_quest" starts up.
 
 init_dynamic_facts:-
   assertz(location(buffet, lottie)),
   assertz(location('healthy meal', buffet)),
-  assertz(location(desk,office)),
-  assertz(location(apple,kitchen)),
-  assertz(location(flashlight,desk)),
-  assertz(location('washing machine',cellar)),
-  assertz(location(nani,'washing machine')),
-  assertz(location(table,kitchen)),
-  assertz(location(crackers,desk)),
-  assertz(location(broccoli,kitchen)),
+  assertz(location('unhealthy meal', buffet)),
   assertz(here(lottie)),
-  assertz(turned_off(flashlight)).
+  assertz(location(ellis, lottie)),
+  assertz(location(nik, lottie)).
+
+character(ellis).
+character(nik).
+
+is_alive(ellis).
+is_alive(nik).
 
 furniture(buffet).
-furniture(desk).
-furniture('washing machine').
-furniture(table).
 
-edible(apple).
-edible(crackers).
 edible('healthy meal').
+edible('unhealthy meal').
 
-tastes_yuchy(broccoli).
 
 %%%%%%%% COMMANDS %%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -196,12 +178,15 @@ moveto(Room):-                  % update the logicbase with the
 look:-
   here(Here),
   respond(['You are in ',Here]),
+  write('You can see the following characters:'),nl,
+  list_characters(Here),
   write('You can see the following things:'),nl,
   list_things(Here),
   write('You can go to the following rooms:'),nl,
   list_connections(Here).
 
 list_things(Place):-
+  (furniture(X) ; edible(X)),
   location(X,Place),
   tab(2),write(X),nl,
   fail.
@@ -213,11 +198,20 @@ list_connections(Place):-
   fail.
 list_connections(_).
 
-list_characters(Character):-
-  location(X,Character),
-  tab(2),write(Character),nl,
+list_characters(Place):-
+  character(X),
+  location(X,Place),
+  tab(2),write(X),nl,
   fail.
 list_characters(_).
+
+% talk_to allows the player to talk to a character
+
+talk_to(Character):-
+  is_here(Character),
+  is_alive(Character),
+  tab(2),write('Hello there!'),nl,
+  fail.
 
 % look_in allows the player to look inside a thing which might
 % contain other things
@@ -291,6 +285,7 @@ eat2(Thing):-
   respond(['Three year olds don''t eat ',Thing]).
 eat2(Thing):-
   respond(['You can''t eat a ',Thing]).
+
 
 % inventory list your possesions
 
@@ -409,6 +404,8 @@ tran_verb(turn_off) --> [turn,off].
 tran_verb(look_in) --> [look,in].
 tran_verb(look_in) --> [look].
 tran_verb(look_in) --> [open].
+tran_verb(talk_to) --> [talk].
+tran_verb(talk_to) --> [talk,to].
 
 intran_verb(inventory) --> [inventory].
 intran_verb(inventory) --> [i].
@@ -444,6 +441,7 @@ noun(thing,flashlight) --> [flash,light].
 noun(thing,'washing machine') --> [washing,machine].
 noun(thing,'dirty clothes') --> [dirty,clothes].
 noun(thing, 'healthy meal') --> [healthy, meal].
+noun(thing, 'unhealthy meal') --> [unhealthy, meal].
 
 % If the player has just typed light, it can be interpreted three ways.
 % If a room name is before it, it must be a room light.  If the
