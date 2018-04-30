@@ -20,23 +20,24 @@ gohrbaugh_quest:-
   write('No rights reserved, use it as you wish'),nl,
   nl,
   write('The year is 2153.'),nl,
-  write('Our story takes place at Messiah College'),nl,nl,
-  write('In the current year, the department chair is not limited like it is today'),nl,
-  write('Instead, one department chair is appointed for life'),nl,
+  write('Our story takes place at Messiah College.'),nl,nl,
+  write('In the current year, the department chair is not limited like it is today.'),nl,
+  write('Instead, one department chair is appointed for life.'),nl,
   nl,
-  write('Currently, the evil Dr. Wcott Seaver'),nl,
-  write('and his army of PHP-powered robots have complete control of the department,'),nl,
+  write('Currently, the evil Dr. Wcott Seaver and his army of PHP-powered robots'),nl,
+  write('have complete control of the department,'),nl,
   write('and he has just passed a movement banning all non-web development classes'),nl,
   write('from the curriculum!'),nl,
   nl,
-  write('You are Rene Gohrbaugh, a retired department chair'),nl,
-  write('You must do everything in your power to stop the theory-disregarding menace!'),nl,
-  write('However, before your quest, you head to Lottie for lunch'),nl,
-  write('(You certainly can''t have an adventure on an empty stomach)'),nl,
+  write('You are Rene Gohrbaugh, a retired department chair, and'),nl,
+  write('everything in your power must be done to stop the theory-disregarding menace!'),nl,
+  nl,
+  write('However, before your quest, you head to Lottie for lunch.'),nl,
+  write('(You certainly can''t have an adventure on an empty stomach).'),nl,
   nl,
   write('Hit any key to continue.'),get0(_),
   write('Type "help" if you need more help on mechanics.'),nl,
-  write('Type "hint" if you want a big hint.'),nl,
+  write('Type "hint" if you want a big hint (heh).'),nl,
   write('Type "quit" if you give up.'),nl,
   nl,
 
@@ -121,20 +122,34 @@ hint:-
 room(lottie).
 room('eisenhower upper hallway').
 room(outside).
+
 room('frey first floor').
 room('frey first floor stairwell').
+room(151).
+room(166).
+room('finance lab').
+
 room('frey second floor').
 room('frey second floor stairwell').
+
 room('frey third floor').
+
 room('faculty hallway').
 room('seaver''s office').
+room('gohrbaugh''s office').
+room('rilmer''s office').
 
 door(lottie, 'eisenhower upper hallway').
 door('eisenhower upper hallway', outside).
 door('outside', 'frey first floor').
+door('frey first floor', 151).
+door('frey first floor', 166).
+door('frey first floor', 'finance lab').
 door('frey first floor', 'frey first floor stairwell').
+
 door('frey first floor stairwell', 'frey second floor').
 door('frey second floor', 'frey second floor stairwell').
+
 door('frey second floor stairwell', 'frey third floor').
 door('frey third floor', 'faculty hallway').
 door('faculty hallway', 'seaver''s office').
@@ -155,7 +170,10 @@ init_dynamic_facts:-
   assertz(here(lottie)),
   assertz(location('mllis eadagan', lottie)),
   assertz(location('sik nloop', lottie)),
-  assertz(location('rordon gamsey', lottie)).
+  assertz(location('rordon gamsey', lottie)),
+  assertz(location(computer, 151)),
+  assertz(location('virus source code', computer)),
+  assertz(location(usb, 166)).
 
 character(ellis).
 character(nik).
@@ -176,9 +194,13 @@ says('sik nloop', 'Meh, I should have gone to Union').
 says('rordon gamsey', 'This food is all raw..').
 
 furniture(buffet).
+furniture(computer).
 
 edible('healthy meal').
 edible('unhealthy meal').
+
+code('virus source code').
+storage_device(usb).
 
 
 %%%%%%%% COMMANDS %%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -206,7 +228,7 @@ moveto(Room):-                  % update the logicbase with the
 
 look:-
   here(Here),
-  respond(['You are in ',Here]),
+  respond(['You are here: ',Here]),
   write('You can see the following characters:'),nl,
   list_characters(Here),
   write('You can see the following things:'),nl,
@@ -215,7 +237,7 @@ look:-
   list_connections(Here).
 
 list_things(Place):-
-  (furniture(X) ; edible(X)),
+  (furniture(X) ; edible(X) ; storage_device(X) ; code(X)),
   location(X,Place),
   tab(2),write(X),nl,
   fail.
@@ -240,9 +262,9 @@ talk_to(Character):-
   is_here(Character),
   is_alive(Character),
   says(Character, X),
-  nl,tab(2),respond([Character, ': ', X]).
-talk_to(_):-
-  write('That person is nowhere to be seen...'),nl,
+  nl,respond([Character, ': ', X]).
+talk_to(Character):-
+  respond([Character, ' isn''t in this area']),
   fail.
 
 % look_in allows the player to look inside a thing which might
@@ -265,13 +287,13 @@ take(Thing):-
   is_takable(Thing),
   move(Thing,have),
   respond(['You now have the ',Thing]).
+take(Thing):-
+  respond(['There is no ', Thing, ' here']).
 
 is_here(Thing):-
   here(Here),
   contains(Thing,Here),!.          % don't backtrack
-is_here(Thing):-
-  respond(['There is no ',Thing,' here']),
-  fail.
+
 
 contains(Thing,Here):-             % recursive definition to find
   location(Thing,Here).            % things contained in things etc.
@@ -466,7 +488,6 @@ det --> [a].
 % words.  We can't expect the user to type the name in quotes.
 
 noun(go_place,R) --> [R], {room(R)}.
-noun(go_place,'dining room') --> [dining,room].
 noun(go_place, 'eisenhower upper hallway') --> [eisenhower, upper, hallway].
 noun(go_place, 'frey first floor') --> [frey, first, floor].
 noun(go_place, 'frey first floor stairwell') --> [frey, first, floor, stairwell].
@@ -478,11 +499,9 @@ noun(go_place, 'seaver''s office') --> ['seaver''s', office].
 
 noun(thing,T) --> [T], {location(T,_)}.
 noun(thing,T) --> [T], {have(T)}.
-noun(thing,flashlight) --> [flash,light].
-noun(thing,'washing machine') --> [washing,machine].
-noun(thing,'dirty clothes') --> [dirty,clothes].
 noun(thing, 'healthy meal') --> [healthy, meal].
 noun(thing, 'unhealthy meal') --> [unhealthy, meal].
+noun(thing, 'virus source code') --> [virus,source,code].
 
 noun(person,P) --> [P], {location(P,_)}.
 noun(person,P) --> [P], {character(P)}.
