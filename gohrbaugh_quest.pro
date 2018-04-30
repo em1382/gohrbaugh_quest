@@ -14,25 +14,25 @@ start:- gohrbaugh_quest.       % main entry point
 
 gohrbaugh_quest:-
   init_dynamic_facts,     % predicates which are not compiled
-
+  nl,
   write('Gohrbaugh Quest: The Battle for the Department Chair'),nl,
   write('Copyright (C) Sladagan inc. 2018'),nl,
   write('No rights reserved, use it as you wish'),nl,
   nl,
   write('The year is 2153.'),nl,
-  write('Our story takes place at Messiah College'),nl,
+  write('Our story takes place at Messiah College'),nl,nl,
   write('In the current year, the department chair is not limited like it is today'),nl,
   write('Instead, one department chair is appointed for life'),nl,
   nl,
   write('Currently, the evil Dr. Wcott Seaver'),nl,
   write('and his army of PHP-powered robots have complete control of the department,'),nl,
   write('and he has just passed a movement banning all non-web development classes'),nl,
-  write('from the department'),nl,
+  write('from the curriculum!'),nl,
   nl,
   write('You are Rene Gohrbaugh, a retired department chair'),nl,
   write('You must do everything in your power to stop the theory-disregarding menace!'),nl,
-  write('You decided to go to Lottie for lunch the day you decided something must be done,'),nl,
-  write('and this is where our story begins'),nl,
+  write('However, before your quest, you head to Lottie for lunch'),nl,
+  write('(You certainly can''t have an adventure on an empty stomach)'),nl,
   nl,
   write('Hit any key to continue.'),get0(_),
   write('Type "help" if you need more help on mechanics.'),nl,
@@ -80,14 +80,15 @@ do(quit):-quit,!.
 % and command_loop will repeat.
 
 nanifound:-
-  have(nani),
-  write('Congratulations, you saved the Nani.'),nl,
-  write('Now you can rest secure.'),nl,nl.
+  fail,
+  write('Congratulations, you defeated Dr. Seaver'),nl,
+  write('and saved Messiah College! Now people can learn'),nl,
+  write('about all aspects of computer science in peace.'),nl,nl.
 
 quit:-
-  write('Giving up?  It''s going to be a scary night'),nl,
-  write('and when you get the Nani it''s not going'),nl,
-  write('to smell right.'),nl,nl.
+  write('Giving up?  I guess you''re okay with people only learning php then'),nl,
+  write('Is this what you really want?'),nl,
+  write('Well, seeya!'),nl,nl.
 
 % The help command
 
@@ -119,9 +120,24 @@ hint:-
 
 room(lottie).
 room('eisenhower upper hallway').
+room(outside).
+room('frey first floor').
+room('frey first floor stairwell').
+room('frey second floor').
+room('frey second floor stairwell').
+room('frey third floor').
+room('faculty hallway').
+room('seaver''s office').
 
 door(lottie, 'eisenhower upper hallway').
-door('eisenhower upper hallway', 'outside').
+door('eisenhower upper hallway', outside).
+door('outside', 'frey first floor').
+door('frey first floor', 'frey first floor stairwell').
+door('frey first floor stairwell', 'frey second floor').
+door('frey second floor', 'frey second floor stairwell').
+door('frey second floor stairwell', 'frey third floor').
+door('frey third floor', 'faculty hallway').
+door('faculty hallway', 'seaver''s office').
 
 connect(X,Y):-
   door(X,Y).
@@ -137,14 +153,27 @@ init_dynamic_facts:-
   assertz(location('healthy meal', buffet)),
   assertz(location('unhealthy meal', buffet)),
   assertz(here(lottie)),
-  assertz(location(ellis, lottie)),
-  assertz(location(nik, lottie)).
+  assertz(location('mllis eadagan', lottie)),
+  assertz(location('sik nloop', lottie)),
+  assertz(location('rordon gamsey', lottie)).
 
 character(ellis).
 character(nik).
+character('mllis eadagan').
+character('sik nloop').
+character('rordon gamsey').
 
 is_alive(ellis).
 is_alive(nik).
+is_alive('mllis eadagan').
+is_alive('sik nloop').
+is_alive('rordon gamsey').
+
+says(ellis, 'Hello, welcome to the demo!').
+says(nik, 'Hi, welcome to the demo!').
+says('mllis eadagan', 'I'' a little sick of this Lottie food').
+says('sik nloop', 'Meh, I should have gone to Union').
+says('rordon gamsey', 'This food is all raw..').
 
 furniture(buffet).
 
@@ -210,7 +239,10 @@ list_characters(_).
 talk_to(Character):-
   is_here(Character),
   is_alive(Character),
-  tab(2),write('Hello there!'),nl,
+  says(Character, X),
+  nl,tab(2),respond([Character, ': ', X]).
+talk_to(_):-
+  write('That person is nowhere to be seen...'),nl,
   fail.
 
 % look_in allows the player to look inside a thing which might
@@ -386,6 +418,7 @@ command([goto,Arg]) --> noun(go_place,Arg).
 
 verb(go_place,goto) --> go_verb.
 verb(thing,V) --> tran_verb(V).
+verb(person,V) --> tran_verb(V).
 verb(intran,V) --> intran_verb(V).
 
 go_verb --> [go].
@@ -404,6 +437,7 @@ tran_verb(turn_off) --> [turn,off].
 tran_verb(look_in) --> [look,in].
 tran_verb(look_in) --> [look].
 tran_verb(look_in) --> [open].
+tran_verb(look_in) --> [examine].
 tran_verb(talk_to) --> [talk].
 tran_verb(talk_to) --> [talk,to].
 
@@ -427,13 +461,20 @@ nounphrase(Type,Noun) --> noun(Type,Noun).
 det --> [the].
 det --> [a].
 
-% Nouns are defined as rooms, or things located somewhere.  We define
-% special cases for those things represented in Nani Search by two
+% Nouns are defined as rooms, things, or characters located somewhere.  We define
+% special cases for those things represented in Gohrbaugh Quest by two
 % words.  We can't expect the user to type the name in quotes.
 
 noun(go_place,R) --> [R], {room(R)}.
 noun(go_place,'dining room') --> [dining,room].
 noun(go_place, 'eisenhower upper hallway') --> [eisenhower, upper, hallway].
+noun(go_place, 'frey first floor') --> [frey, first, floor].
+noun(go_place, 'frey first floor stairwell') --> [frey, first, floor, stairwell].
+noun(go_place, 'frey second floor') --> [frey,second,floor].
+noun(go_place, 'frey second floor stairwell') --> [frey,second,floor,stairwell].
+noun(go_place, 'frey third floor') --> [frey,third,floor].
+noun(go_place, 'faculty hallway') --> [faculty,hallway].
+noun(go_place, 'seaver''s office') --> ['seaver''s', office].
 
 noun(thing,T) --> [T], {location(T,_)}.
 noun(thing,T) --> [T], {have(T)}.
@@ -442,6 +483,12 @@ noun(thing,'washing machine') --> [washing,machine].
 noun(thing,'dirty clothes') --> [dirty,clothes].
 noun(thing, 'healthy meal') --> [healthy, meal].
 noun(thing, 'unhealthy meal') --> [unhealthy, meal].
+
+noun(person,P) --> [P], {location(P,_)}.
+noun(person,P) --> [P], {character(P)}.
+noun(person, 'mllis eadagan') --> [mllis, eadagan].
+noun(person, 'sik nloop') --> [sik, nloop].
+noun(person, 'rordon gamsey') --> [rordon, gamsey].
 
 % If the player has just typed light, it can be interpreted three ways.
 % If a room name is before it, it must be a room light.  If the
