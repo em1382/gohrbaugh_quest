@@ -157,9 +157,19 @@ door('frey first floor', 'finance lab').
 door('frey first floor', 'frey first floor stairwell').
 
 door('frey first floor stairwell', 'frey second floor').
+
+door('frey second floor', 241).
+door('frey second floor', 243).
+door('frey second floor', 250).
 door('frey second floor', 'frey second floor stairwell').
 
 door('frey second floor stairwell', 'frey third floor').
+
+door('frey third floor', 343).
+door('frey third floor', 345).
+door('frey third floor', 347).
+door('frey third floor', 349).
+door('frey third floor', 'faculty hallway').
 door('frey third floor', 'faculty hallway').
 door('faculty hallway', 'seaver''s office').
 
