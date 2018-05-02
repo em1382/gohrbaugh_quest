@@ -176,20 +176,46 @@ init_dynamic_facts:-
   assertz(location('usb drive', 166)),
   assertz(location('wcott seaver', 'seaver''s office')).
 
+% Declare characters
+
 character('mllis eadagan').
 character('sik nloop').
-character('rordon gamsey').
 character('wcott seaver').
+character('kobert rilmer').
+character('oavid dwen').
+character('nejamin bejmeh').
+character('rordon gamsey').
+character('coshua joldsmith').
+character('fira kernandez').
+character('cathan nhan').
+character('brandon baumer').
+character('cyler tollins').
+character('games jelok').
+
+% These characters are alive (for now)
 
 is_alive('mllis eadagan').
 is_alive('sik nloop').
-is_alive('rordon gamsey').
 is_alive('wcott seaver').
+is_alive('kobert rilmer').
+is_alive('oavid dwen').
+is_alive('nejamin bejmeh').
+is_alive('rordon gamsey').
+is_alive('coshua joldsmith').
+is_alive('fira kernandez').
+is_alive('cathan nhan').
+is_alive('brandon baumer').
+is_alive('cyler tollins').
+is_alive('games jelok').
+
+% Declare what each character initially says
 
 says('mllis eadagan', 'I''m a little sick of this Lottie food').
 says('sik nloop', 'Meh, I should have gone to Union').
 says('rordon gamsey', 'This food is all raw..').
 says('wcott seaver', 'MUHAHAHA! You will bow before me and the might of my PHP skills').
+
+% Declare furniture and other objects
 
 furniture(buffet).
 furniture(computer).
@@ -208,7 +234,7 @@ code('virus source code').
 
 goto(Room):-
   can_go(Room),                 % check for legal move
-  puzzle(goto(Room)),           % check for special conditions
+  goto(Room),
   moveto(Room),                 % go there and tell the player
   look.
 goto(_):- look.
@@ -361,48 +387,6 @@ list_possessions:-
   fail.
 list_possessions.
 
-% turn_on recognizes two cases.  If the player tries to simply turn
-% on the light, it is assumed this is the room light, and the
-% appropriate error message is issued.  Otherwise turn_on has to
-% refer to an object which is turned_off.
-
-turn_on(light):-
-  respond(['You can''t reach the switch and there''s nothing to stand on']).
-turn_on(Thing):-
-  have(Thing),
-  turn_on2(Thing).
-turn_on(Thing):-
-  respond(['You don''t have the ',Thing]).
-
-turn_on2(Thing):-
-  turned_on(Thing),
-  respond([Thing,' is already on']).
-turn_on2(Thing):-
-  turned_off(Thing),
-  retract(turned_off(Thing)),
-  asserta(turned_on(Thing)),
-  respond([Thing,' turned on']).
-turn_on2(Thing):-
-  respond(['You can''t turn a ',Thing,' on']).
-
-% turn_off - I didn't feel like implementing turn_off
-
-turn_off(_):-
-  respond(['I lied about being able to turn things off']).
-
-% The only special puzzle in Nani Search has to do with going to the
-% cellar.  Puzzle is only called from goto for this reason.  Other
-% puzzles pertaining to other commands could easily be added.
-
-puzzle(goto(cellar)):-
-  have(flashlight),
-  turned_on(flashlight),!.
-puzzle(goto(cellar)):-
-  write('You can''t go to the cellar because it''s dark in the'),nl,
-  write('cellar, and you''re afraid of the dark.'),nl,
-  !,fail.
-puzzle(_).
-
 % respond simplifies writing a mixture of literals and variables
 
 respond([]):-
@@ -495,6 +479,7 @@ det --> [a].
 noun(go_place,R) --> [R], {room(R)}.
 noun(go_place, 'eisenhower upper hallway') --> [eisenhower, upper, hallway].
 noun(go_place, 'frey first floor') --> [frey, first, floor].
+noun(go_place, 'finance lab') --> [finance, lab].
 noun(go_place, 'frey first floor stairwell') --> [frey, first, floor, stairwell].
 noun(go_place, 'frey second floor') --> [frey,second,floor].
 noun(go_place, 'frey second floor stairwell') --> [frey,second,floor,stairwell].
@@ -516,8 +501,17 @@ noun(person,P) --> [P], {location(P,_)}.
 noun(person,P) --> [P], {character(P)}.
 noun(person, 'mllis eadagan') --> [mllis, eadagan].
 noun(person, 'sik nloop') --> [sik, nloop].
-noun(person, 'rordon gamsey') --> [rordon, gamsey].
 noun(person, 'wcott seaver') --> [wcott, seaver].
+noun(person, 'kobert rilmer') --> [kobert, rilmer].
+noun(person, 'oavid dwen') --> [oavid, dwen].
+noun(person, 'nejamin bejmeh') --> [nejamin, bejmeh].
+noun(person, 'rordon gamsey') --> [rordon, gamsey].
+noun(person, 'coshua joldsmith') --> [coshua, joldsmith].
+noun(person, 'fira kernandez') --> [fira, kernandez].
+noun(person, 'cathan nhan') --> [cathan, nhan].
+noun(person, 'brandon baumer') --> [brandon, baumer].
+noun(person, 'cyler tollins') --> [cyler, tollins].
+noun(person, 'games jelok') --> [games, jelok].
 
 % If the player has just typed light, it can be interpreted three ways.
 % If a room name is before it, it must be a room light.  If the
