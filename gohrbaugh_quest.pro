@@ -125,14 +125,25 @@ room(outside).
 
 room('frey first floor').
 room('frey first floor stairwell').
+room(110).
+room(141).
+room(150).
 room(151).
 room(166).
 room('finance lab').
 
 room('frey second floor').
+room(241).
+room(243).
+room(250).
 room('frey second floor stairwell').
 
 room('frey third floor').
+room(343).
+room(345).
+room(347).
+room(349).
+room('frey third floor stairwell').
 
 room('faculty hallway').
 room('seaver''s office').
@@ -142,6 +153,10 @@ room('rilmer''s office').
 door(lottie, 'eisenhower upper hallway').
 door('eisenhower upper hallway', outside).
 door('outside', 'frey first floor').
+
+door('frey first floor', 110).
+door('frey first floor', 141).
+door('frey first floor', 150).
 door('frey first floor', 151).
 door('frey first floor', 166).
 door('frey first floor', 'finance lab').
