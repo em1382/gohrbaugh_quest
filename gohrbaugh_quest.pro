@@ -1,8 +1,4 @@
-% NANI SEARCH - A sample adventure game
-
-% Nani Search is designed to illustrate Prolog programming.  It
-% is an implementation of the principle example used in
-% this tutorial.
+% GOHRBAUGH QUEST: A Simple Adventure Game
 
 :- dynamic(have/1).
 :- dynamic(here/1).
@@ -69,8 +65,6 @@ do(take(X)):-take(X),!.
 do(drop(X)):-drop(X),!.
 do(eat(X)):-eat(X),!.
 do(look):-look,!.
-do(turn_on(X)):-turn_on(X),!.
-do(turn_off(X)):-turn_off(X),!.
 do(look_in(X)):-look_in(X),!.
 do(talk_to(X)):-talk_to(X),!.
 do(quit):-quit,!.
@@ -152,7 +146,7 @@ room('rilmer''s office').
 
 door(lottie, 'eisenhower upper hallway').
 door('eisenhower upper hallway', outside).
-door('outside', 'frey first floor').
+door(outside, 'frey first floor').
 
 door('frey first floor', 110).
 door('frey first floor', 141).
@@ -183,12 +177,21 @@ init_dynamic_facts:-
   assertz(location('healthy meal', buffet)),
   assertz(location('unhealthy meal', buffet)),
   assertz(here(lottie)),
-  assertz(location('mllis eadagan', lottie)),
-  assertz(location('sik nloop', lottie)),
   assertz(location('rordon gamsey', lottie)),
+  assertz(location('oavid dwen', 150)),
+  assertz(location('mllis eadagan', 166)),
+  assertz(location('sik nloop', 166)),
+  assertz(location('coshua joldsmith', 166)),
+  assertz(location('fira kernandez', 166)),
+  assertz(location('cathan nhan', 166)),
+  assertz(location('cyler tollins', 151)),
+  assertz(location('games jelok', 151)),
+  assertz(location('brandon baumer', 151)),
+  assertz(location('usb drive', 166)),
   assertz(location(computer, 151)),
   assertz(location('virus source code', computer)),
-  assertz(location('usb drive', 166)),
+  assertz(location('nejamin bejmeh', 'finance lab')),
+  assertz(location('kobert rilmer', 'rilmer''s office')),
   assertz(location('wcott seaver', 'seaver''s office')).
 
 % Declare characters
@@ -225,10 +228,19 @@ is_alive('games jelok').
 
 % Declare what each character initially says
 
-says('mllis eadagan', 'I''m a little sick of this Lottie food').
-says('sik nloop', 'Meh, I should have gone to Union').
+says('mllis eadagan', 'Hello, and welcome to our presentation').
+says('sik nloop', 'Welcome to the presentation, I''m sik nloop, and this is mllis eadagan').
 says('rordon gamsey', 'This food is all raw..').
 says('wcott seaver', 'MUHAHAHA! You will bow before me and the might of my PHP skills').
+says('kobert rilmer', 'Wasn''t there an exam I was supposed to be proctoring today?').
+says('oavid dwen', 'My favorite colors: cyan and goldenrod').
+says('nejamin bejmeh', 'The Impact Venture Challeneg went well this year, but ServeCentral should have won').
+says('coshua joldsmith', 'Shh, I''m working on my text game for OPL').
+says('fira kernandez', 'I really like PHP, but I''m not so keen on Dr. Seaver''s decision').
+says('cathan nhan', 'This game looks really interesting').
+says('brandon baumer', 'I know, I have a strange name, I get it').
+says('cyler tollins', 'I''m still salty about ServeCentral losing the IVC.').
+says('games jelok', 'Bananas').
 
 % Declare furniture and other objects
 
@@ -249,7 +261,7 @@ code('virus source code').
 
 goto(Room):-
   can_go(Room),                 % check for legal move
-  goto(Room),
+  %goto(Room),
   moveto(Room),                 % go there and tell the player
   look.
 goto(_):- look.
@@ -351,7 +363,7 @@ contains(Thing,Here):-
   contains(X,Here).
 
 is_takable(Thing):-                % you can't take the furniture
-  furniture(Thing),
+  (furniture(Thing) ; character(Thing)),
   respond(['You can''t pick up a ',Thing]),
   !,fail.
 is_takable(_).                     % not furniture, ok to take
@@ -527,15 +539,6 @@ noun(person, 'cathan nhan') --> [cathan, nhan].
 noun(person, 'brandon baumer') --> [brandon, baumer].
 noun(person, 'cyler tollins') --> [cyler, tollins].
 noun(person, 'games jelok') --> [games, jelok].
-
-% If the player has just typed light, it can be interpreted three ways.
-% If a room name is before it, it must be a room light.  If the
-% player has the flash light, assume it means the flash light.  Otherwise
-% assume it is the room light.
-
-noun(thing,light) --> [X,light], {room(X)}.
-noun(thing,flashlight) --> [light], {have(flashlight)}.
-noun(thing,light) --> [light].
 
 % readlist - read a list of words, based on a Clocksin & Mellish
 % example.
