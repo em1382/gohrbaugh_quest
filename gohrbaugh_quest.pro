@@ -51,7 +51,7 @@ command_loop:-
   repeat,
   get_command(X),
   do(X),
-  (nanifound; X == quit).
+  (seaverdefeated; X == quit).
 
 % do - matches the input command with the predicate which carries out
 %     the command.  More general approaches which might work in the
@@ -80,8 +80,8 @@ do(quit):-quit,!.
 % succeed and the command_loop will complete.  Otherwise it fails
 % and command_loop will repeat.
 
-nanifound:-
-  fail,
+seaverdefeated:-
+  not(is_alive('wcott seaver')),
   write('Congratulations, you defeated Dr. Seaver'),nl,
   write('and saved Messiah College! Now people can learn'),nl,
   write('about all aspects of computer science in peace.'),nl,nl.
@@ -173,25 +173,23 @@ init_dynamic_facts:-
   assertz(location('rordon gamsey', lottie)),
   assertz(location(computer, 151)),
   assertz(location('virus source code', computer)),
-  assertz(location(usb, 166)).
+  assertz(location('usb drive', 166)),
+  assertz(location('wcott seaver', 'seaver''s office')).
 
-character(ellis).
-character(nik).
 character('mllis eadagan').
 character('sik nloop').
 character('rordon gamsey').
+character('wcott seaver').
 
-is_alive(ellis).
-is_alive(nik).
 is_alive('mllis eadagan').
 is_alive('sik nloop').
 is_alive('rordon gamsey').
+is_alive('wcott seaver').
 
-says(ellis, 'Hello, welcome to the demo!').
-says(nik, 'Hi, welcome to the demo!').
-says('mllis eadagan', 'I'' a little sick of this Lottie food').
+says('mllis eadagan', 'I''m a little sick of this Lottie food').
 says('sik nloop', 'Meh, I should have gone to Union').
 says('rordon gamsey', 'This food is all raw..').
+says('wcott seaver', 'MUHAHAHA! You will bow before me and the might of my PHP skills').
 
 furniture(buffet).
 furniture(computer).
@@ -199,8 +197,9 @@ furniture(computer).
 edible('healthy meal').
 edible('unhealthy meal').
 
+storage_device('usb drive').
+load('usb drive', nothing).
 code('virus source code').
-storage_device(usb).
 
 
 %%%%%%%% COMMANDS %%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -285,8 +284,17 @@ look_in(Thing):-
 take(Thing):-
   is_here(Thing),
   is_takable(Thing),
+  (edible(Thing) ; storage_device(Thing)),
   move(Thing,have),
-  respond(['You now have the ',Thing]).
+  respond(['You now have the ',Thing]),!.
+take(Thing):-
+  code(Thing),
+  have('usb drive'),
+  assertz(load('usb drive', Thing)),
+  respond(['You now have the ', Thing, ' on your usb drive']).
+take(Thing):-
+  code(Thing),
+  respond(['You need something to put the ', Thing, ' on.']).
 take(Thing):-
   respond(['There is no ', Thing, ' here']).
 
@@ -334,9 +342,6 @@ eat2(Thing):-
   edible(Thing),
   retract(have(Thing)),
   respond(['That ',Thing,' was good']).
-eat2(Thing):-
-  tastes_yuchy(Thing),
-  respond(['Three year olds don''t eat ',Thing]).
 eat2(Thing):-
   respond(['You can''t eat a ',Thing]).
 
@@ -496,11 +501,15 @@ noun(go_place, 'frey second floor stairwell') --> [frey,second,floor,stairwell].
 noun(go_place, 'frey third floor') --> [frey,third,floor].
 noun(go_place, 'faculty hallway') --> [faculty,hallway].
 noun(go_place, 'seaver''s office') --> ['seaver''s', office].
+noun(go_place, 'rilmer''s office') --> ['rilmer''s', office].
+noun(go_place, 'gohrbaugh''s office') --> ['gohrbaugh''s', office].
+noun(go_place, 'dwen''s office') --> ['dwen''s', office].
 
 noun(thing,T) --> [T], {location(T,_)}.
 noun(thing,T) --> [T], {have(T)}.
 noun(thing, 'healthy meal') --> [healthy, meal].
 noun(thing, 'unhealthy meal') --> [unhealthy, meal].
+noun(thing, 'usb drive') --> [usb,drive].
 noun(thing, 'virus source code') --> [virus,source,code].
 
 noun(person,P) --> [P], {location(P,_)}.
@@ -508,6 +517,7 @@ noun(person,P) --> [P], {character(P)}.
 noun(person, 'mllis eadagan') --> [mllis, eadagan].
 noun(person, 'sik nloop') --> [sik, nloop].
 noun(person, 'rordon gamsey') --> [rordon, gamsey].
+noun(person, 'wcott seaver') --> [wcott, seaver].
 
 % If the player has just typed light, it can be interpreted three ways.
 % If a room name is before it, it must be a room light.  If the
