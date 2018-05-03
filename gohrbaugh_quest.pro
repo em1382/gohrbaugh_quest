@@ -60,6 +60,7 @@ command_loop:-
 do(goto(X)):-goto(X),!.
 do(nshelp):-nshelp,!.
 do(hint):-hint,!.
+do(unlock(X)):-unlock(X),!.
 do(inventory):-inventory,!.
 do(take(X)):-take(X),!.
 do(drop(X)):-drop(X),!.
@@ -126,13 +127,13 @@ room(151).
 room(166).
 room('finance lab').
 
-room('frey second floor').
+room('frey second floor', locked).
 room(241).
 room(243).
 room(250).
 room('frey second floor stairwell').
 
-room('frey third floor').
+room('frey third floor', locked).
 room(343).
 room(345).
 room(347).
@@ -140,9 +141,11 @@ room(349).
 room('frey third floor stairwell').
 
 room('faculty hallway').
-room('seaver''s office').
+room('seaver''s office', locked).
 room('gohrbaugh''s office').
 room('rilmer''s office').
+room('dwens''s office').
+room('bejmeh''s office').
 
 door(lottie, 'eisenhower upper hallway').
 door('eisenhower upper hallway', outside).
@@ -172,11 +175,16 @@ door('frey third floor', 349).
 door('frey third floor', 'faculty hallway').
 door('frey third floor', 'faculty hallway').
 door('faculty hallway', 'seaver''s office').
+door('faculty hallway', 'rilmer''s office').
+door('faculty hallway', 'gohrbaugh''s office').
+door('faculty hallway', 'dwens''s office').
+door('faculty hallway', 'bejmeh''s office').
 
 connect(X,Y):-
   door(X,Y).
 connect(X,Y):-
   door(Y,X).
+
 
 % These facts are all subject to change during the game, so rather
 % than being compiled, they are "asserted" to the listener at
@@ -202,7 +210,8 @@ init_dynamic_facts:-
   assertz(location('virus source code', computer)),
   assertz(location('nejamin bejmeh', 'finance lab')),
   assertz(location('kobert rilmer', 'rilmer''s office')),
-  assertz(location('wcott seaver', 'seaver''s office')).
+  assertz(location('wcott seaver', 'seaver''s office')),
+  assertz(location('security lock', 'frey first floor')).
 
 % Declare characters
 
@@ -256,6 +265,7 @@ says('games jelok', 'Bananas').
 
 furniture(buffet).
 furniture(computer).
+furniture('security lock').
 
 edible('healthy meal').
 edible('unhealthy meal').
@@ -271,6 +281,7 @@ code('virus source code').
 
 goto(Room):-
   can_go(Room),                 % check for legal move
+  unlocked(Room),
   %goto(Room),
   moveto(Room),                 % go there and tell the player
   look.
@@ -281,6 +292,26 @@ can_go(Room):-                  % if there is a connection it
   connect(Here,Room),!.
 can_go(Room):-
   respond(['You can''t get to ',Room,' from here']),fail.
+unlocked(Room):-
+  room(Room, locked),
+  respond(['You can''t get into ',Room, ' because it is locked']),fail.
+unlocked(Room):-
+  room(Room).
+
+unlock(Room):-
+    here(Here),
+    connect(Here,Room),
+    have('usb drive'),
+    load('usb drive','virus source code'),
+    assertz(room(Room)),
+    respond(['You successfully unlocked ',Room]).
+  
+unlock(Room):-
+    here(Here),
+    connect(Here,Room),
+    respond(['You don''t have a way to unlock ',Room,' ...']).
+unlock(Room):-
+  respond(['You can''t unlock',Room,'from here']).
 
 moveto(Room):-                  % update the logicbase with the
   retract(here(_)),             % new room
@@ -467,6 +498,7 @@ command([goto,Arg]) --> noun(go_place,Arg).
 verb(go_place,goto) --> go_verb.
 verb(thing,V) --> tran_verb(V).
 verb(person,V) --> tran_verb(V).
+verb(place,V) --> tran_verb(V).
 verb(intran,V) --> intran_verb(V).
 
 go_verb --> [go].
@@ -488,6 +520,8 @@ tran_verb(look_in) --> [open].
 tran_verb(look_in) --> [examine].
 tran_verb(talk_to) --> [talk].
 tran_verb(talk_to) --> [talk,to].
+
+tran_verb(unlock) --> [unlock].
 
 intran_verb(inventory) --> [inventory].
 intran_verb(inventory) --> [i].
@@ -514,6 +548,7 @@ det --> [a].
 % words.  We can't expect the user to type the name in quotes.
 
 noun(go_place,R) --> [R], {room(R)}.
+noun(place,R) --> [R], {room(R)}.
 noun(go_place, 'eisenhower upper hallway') --> [eisenhower, upper, hallway].
 noun(go_place, 'frey first floor') --> [frey, first, floor].
 noun(go_place, 'finance lab') --> [finance, lab].
@@ -527,12 +562,15 @@ noun(go_place, 'rilmer''s office') --> ['rilmer''s', office].
 noun(go_place, 'gohrbaugh''s office') --> ['gohrbaugh''s', office].
 noun(go_place, 'dwen''s office') --> ['dwen''s', office].
 
+noun(place, 'frey second floor') --> [frey,second,floor].
+
 noun(thing,T) --> [T], {location(T,_)}.
 noun(thing,T) --> [T], {have(T)}.
 noun(thing, 'healthy meal') --> [healthy, meal].
 noun(thing, 'unhealthy meal') --> [unhealthy, meal].
 noun(thing, 'usb drive') --> [usb,drive].
 noun(thing, 'virus source code') --> [virus,source,code].
+noun(thing, 'security lock') --> [security,lock].
 
 noun(person,P) --> [P], {location(P,_)}.
 noun(person,P) --> [P], {character(P)}.
