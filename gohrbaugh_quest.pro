@@ -3,6 +3,7 @@
 :- dynamic(have/1).
 :- dynamic(here/1).
 :- dynamic(location/2).
+:- dynamic(is_alive/1).
 :- dynamic turned_off/1.
 :- dynamic turned_on/1.
 
@@ -64,6 +65,7 @@ do(inventory):-inventory,!.
 do(take(X)):-take(X),!.
 do(drop(X)):-drop(X),!.
 do(eat(X)):-eat(X),!.
+do(attack(X)):-attack(X),!.
 do(look):-look,!.
 do(look_in(X)):-look_in(X),!.
 do(talk_to(X)):-talk_to(X),!.
@@ -178,9 +180,7 @@ connect(X,Y):-
 connect(X,Y):-
   door(Y,X).
 
-% These facts are all subject to change during the game, so rather
-% than being compiled, they are "asserted" to the listener at
-% run time.  This predicate is called when "gohrbaugh_quest" starts up.
+% This predicate is called when "gohrbaugh_quest" starts up.
 
 init_dynamic_facts:-
   assertz(location(buffet, lottie)),
@@ -199,6 +199,10 @@ init_dynamic_facts:-
   assertz(location('brandon baumer', 151)),
   assertz(location('usb drive', 166)),
   assertz(location(computer, 151)),
+  assertz(location(robot, 343)),
+  assertz(location(brobot, 345)),
+  assertz(location(chickenbot, 'faculty hallway')),
+  assertz(location(ketchupbot, lottie)),
   assertz(location('virus source code', computer)),
   assertz(location('nejamin bejmeh', 'finance lab')),
   assertz(location('kobert rilmer', 'rilmer''s office')),
@@ -219,6 +223,24 @@ character('cathan nhan').
 character('brandon baumer').
 character('cyler tollins').
 character('games jelok').
+
+% Declare enemies
+
+enemy(robot).
+enemy(brobot).
+enemy(chickenbot).
+enemy(ketchupbot).
+
+% Declare loot
+loot(robot, gear).
+loot(brobot, weights).
+loot(chickenbot, drumstick).
+loot(ketchupbot, ketchup).
+
+is_alive(robot).
+is_alive(brobot).
+is_alive(chickenbot).
+is_alive(ketchupbot).
 
 % These characters are alive (for now)
 
@@ -259,6 +281,11 @@ furniture(computer).
 
 edible('healthy meal').
 edible('unhealthy meal').
+edible(drumstick).
+edible(ketchup).
+
+object(weights).
+object(gear).
 
 storage_device('usb drive').
 load('usb drive', nothing).
@@ -293,13 +320,15 @@ look:-
   respond(['You are here: ',Here]),
   write('You can see the following characters:'),nl,
   list_characters(Here),
+  write('You can see the following enemies:'),nl,
+  list_enemies(Here),
   write('You can see the following things:'),nl,
   list_things(Here),
   write('You can go to the following rooms:'),nl,
   list_connections(Here).
 
 list_things(Place):-
-  (furniture(X) ; edible(X) ; storage_device(X) ; code(X)),
+  (furniture(X) ; edible(X) ; storage_device(X) ; code(X) ; object(X)),
   location(X,Place),
   tab(2),write(X),nl,
   fail.
@@ -312,11 +341,20 @@ list_connections(Place):-
 list_connections(_).
 
 list_characters(Place):-
+  is_alive(X),
   character(X),
   location(X,Place),
   tab(2),write(X),nl,
   fail.
 list_characters(_).
+
+list_enemies(Place):-
+  is_alive(X),
+  enemy(X),
+  location(X, Place),
+  tab(2),write(X),nl,
+  fail.
+list_enemies(_).
 
 % talk_to allows the player to talk to a character
 
@@ -409,6 +447,19 @@ eat2(Thing):-
   respond(['You can''t eat a ',Thing]).
 
 
+% Attack, because every adventure game lets you attack things.
+
+attack(Enemy):-
+  enemy(Enemy),
+  retract(is_alive(Enemy)),
+  respond(['The ', Enemy, ' lies defeated before you']),
+  loot(Enemy, Loot),
+  asserta(have(Loot)),
+  respond(['You looted a ', Loot, ' from the ', Enemy]).
+attack(Thing):-
+  respond(['You can''t attack ', Thing]).
+
+
 % inventory list your possesions
 
 inventory:-
@@ -488,6 +539,10 @@ tran_verb(look_in) --> [open].
 tran_verb(look_in) --> [examine].
 tran_verb(talk_to) --> [talk].
 tran_verb(talk_to) --> [talk,to].
+tran_verb(attack) --> [attack].
+tran_verb(attack) --> [punch].
+tran_verb(attack) --> [smack].
+tran_verb(attack) --> [whack].
 
 intran_verb(inventory) --> [inventory].
 intran_verb(inventory) --> [i].
@@ -549,6 +604,8 @@ noun(person, 'cathan nhan') --> [cathan, nhan].
 noun(person, 'brandon baumer') --> [brandon, baumer].
 noun(person, 'cyler tollins') --> [cyler, tollins].
 noun(person, 'games jelok') --> [games, jelok].
+
+noun(enemy,E) --> [E], {location(E,_)}.
 
 % readlist - read a list of words, based on a Clocksin & Mellish
 % example.
