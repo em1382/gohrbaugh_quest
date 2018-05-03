@@ -4,8 +4,7 @@
 :- dynamic(here/1).
 :- dynamic(location/2).
 :- dynamic(is_alive/1).
-:- dynamic turned_off/1.
-:- dynamic turned_on/1.
+:- dynamic(locked/1).
 
 start:- gohrbaugh_quest.       % main entry point
 
@@ -174,6 +173,8 @@ door('frey third floor', 349).
 door('frey third floor', 'faculty hallway').
 door('faculty hallway', 'seaver''s office').
 
+locked('frey second floor').
+
 connect(X,Y):-
   door(X,Y).
 connect(X,Y):-
@@ -300,7 +301,7 @@ code('virus source code').
 
 goto(Room):-
   can_go(Room),                 % check for legal move
-  %goto(Room),
+  puzzle(goto(Room)),
   moveto(Room),                 % go there and tell the player
   look.
 goto(_):- look.
@@ -477,6 +478,20 @@ list_possessions:-
   tab(2),write(X),nl,
   fail.
 list_possessions.
+
+% Puzzle checks for puzzle conditions
+
+puzzle(goto('frey second floor')):-
+  locked('frey second floor'),
+  have('usb drive'),
+  load('usb drive', 'virus source code'),
+  retract(locked('frey second floor')),
+  write('You use the virus on the usb stick to spoof the lock.'),nl,!.
+puzzle(goto('frey second floor')):-
+  locked('frey second floor'),
+  write('The door is locked, but there''s a usb port in the bottom of the lock...'),nl,
+  !,fail.
+puzzle(_).
 
 % respond simplifies writing a mixture of literals and variables
 
