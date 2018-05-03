@@ -93,6 +93,7 @@ nshelp:-
   write('The commands can cause you to:'),nl,
   nl,
   write('   go to a room          (ex. go to the office)'),nl,
+  write('   attack something      (ex. attack robot)'),nl,
   write('   look around           (ex. look)'),nl,
   write('   look in something     (ex. look in the desk)'),nl,
   write('   take something        (ex. take the apple)'),nl,
@@ -138,12 +139,37 @@ room(343).
 room(345).
 room(347).
 room(349).
-room('frey third floor stairwell').
 
 room('faculty hallway').
 room('seaver''s office').
 room('gohrbaugh''s office').
 room('rilmer''s office').
+
+description(lottie, 'You look around. All around you, you see students eating their lunches.').
+description('eisenhower upper hallway', 'You look around: it''s the upper hallway of eisenhower...Not much here.').
+description(outside, 'It''s a nice day out, the sun is shining.').
+description('frey first floor', 'The nerds are out in force today, they say there''s a demo going on for a new text adventure game.').
+description('frey first floor stairwell', 'You look up the stairs, it appears the stairway is blocked off after the second floor.\nThere is a card reader next to the door.').
+description(110, 'It''s a classroom.').
+description(141, 'It''s a classroom.').
+description(150, 'It''s a classroom.').
+description(151, 'It''s a computer lab.').
+description(166, 'It''s a classroom.').
+description('finance lab', 'The finance lab.').
+description('frey second floor', 'The second floor of frey. Not many people around.').
+description(241, 'It''s a classroom.').
+description(243, 'It''s a classroom.').
+description(250, 'It''s a classroom.').
+description('frey second floor stairwell', 'The stairs down are blocked off, the stairs up are open.').
+description('frey third floor', 'There''s almost no one up here. Spooky.').
+description(343, 'It''s a classroom.').
+description(345, 'It''s a classroom.').
+description(347, 'It''s a classroom.').
+description(349, 'It''s a classroom.').
+description('faculty hallway', 'It''s deserted, Dr. Seaver must be close!').
+description('seaver''s office', 'Wow, Seaver has a pretty nice office.').
+description('gohrbaugh''s office', 'My office, sweet!').
+description('rilmer''s office', 'It looks very formal in here.').
 
 door(lottie, 'eisenhower upper hallway').
 door('eisenhower upper hallway', outside).
@@ -172,6 +198,8 @@ door('frey third floor', 347).
 door('frey third floor', 349).
 door('frey third floor', 'faculty hallway').
 door('faculty hallway', 'seaver''s office').
+door('faculty hallway', 'rilmer''s office').
+door('faculty hallway', 'gohrbaugh''s office').
 
 locked('frey second floor').
 
@@ -212,7 +240,6 @@ init_dynamic_facts:-
 
 character('mllis eadagan').
 character('sik nloop').
-% character('wcott seaver').
 character('kobert rilmer').
 character('oavid dwen').
 character('nejamin bejmeh').
@@ -275,7 +302,10 @@ says('fira kernandez', 'I really like PHP, but I''m not so keen on Dr. Seaver''s
 says('cathan nhan', 'This game looks really interesting').
 says('brandon baumer', 'I know, I have a strange name, I get it').
 says('cyler tollins', 'I''m still salty about ServeCentral losing the IVC.').
-says('games jelok', 'Bananas').
+says('games jelok', 'Hello World').
+
+% Declare says for enemies
+
 
 % Declare furniture and other objects
 
@@ -321,6 +351,8 @@ moveto(Room):-                  % update the logicbase with the
 look:-
   here(Here),
   respond(['You are here: ',Here]),
+  description(Here, Description),
+  write(Description),nl,nl,
   write('You can see the following characters:'),nl,
   list_characters(Here),
   write('You can see the following enemies:'),nl,
