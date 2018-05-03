@@ -172,7 +172,6 @@ door('frey third floor', 345).
 door('frey third floor', 347).
 door('frey third floor', 349).
 door('frey third floor', 'faculty hallway').
-door('frey third floor', 'faculty hallway').
 door('faculty hallway', 'seaver''s office').
 
 connect(X,Y):-
@@ -212,7 +211,7 @@ init_dynamic_facts:-
 
 character('mllis eadagan').
 character('sik nloop').
-character('wcott seaver').
+% character('wcott seaver').
 character('kobert rilmer').
 character('oavid dwen').
 character('nejamin bejmeh').
@@ -230,12 +229,15 @@ enemy(robot).
 enemy(brobot).
 enemy(chickenbot).
 enemy(ketchupbot).
+enemy('wcott seaver').
 
 % Declare loot
+
 loot(robot, gear).
 loot(brobot, weights).
 loot(chickenbot, drumstick).
 loot(ketchupbot, ketchup).
+loot('wcott seaver', 'seaver''s source code').
 
 is_alive(robot).
 is_alive(brobot).
@@ -324,7 +326,7 @@ look:-
   list_enemies(Here),
   write('You can see the following things:'),nl,
   list_things(Here),
-  write('You can go to the following rooms:'),nl,
+  write('You can go to the following areas:'),nl,
   list_connections(Here).
 
 list_things(Place):-
@@ -450,9 +452,10 @@ eat2(Thing):-
 % Attack, because every adventure game lets you attack things.
 
 attack(Enemy):-
+  is_alive(Enemy),
   enemy(Enemy),
   retract(is_alive(Enemy)),
-  respond(['The ', Enemy, ' lies defeated before you']),
+  respond([Enemy, ' lies defeated before you']),
   loot(Enemy, Loot),
   asserta(have(Loot)),
   respond(['You looted a ', Loot, ' from the ', Enemy]).
