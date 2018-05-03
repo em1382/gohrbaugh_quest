@@ -455,6 +455,7 @@ eat2(Thing):-
 attack(Enemy):-
   is_alive(Enemy),
   enemy(Enemy),
+  puzzle(attack(Enemy)),
   retract(is_alive(Enemy)),
   respond([Enemy, ' lies defeated before you']),
   loot(Enemy, Loot),
@@ -491,6 +492,17 @@ puzzle(goto('frey second floor')):-
   locked('frey second floor'),
   write('The door is locked, but there''s a usb port in the bottom of the lock...'),nl,
   !,fail.
+puzzle(attack('wcott seaver')):-
+  not(is_alive(robot)),
+  not(is_alive(brobot)),
+  not(is_alive(chickenbot)),
+  not(is_alive(ketchupbot)),
+  write('You have defeated the php-powered robots, seaver''s shields are down!'),nl,!.
+puzzle(attack('wcott seaver')):-
+  write('Seaver''s shield prevents you from attacking. Maybe if you beat his robots...'),nl,
+  !,fail.
+
+
 puzzle(_).
 
 % respond simplifies writing a mixture of literals and variables
