@@ -3,8 +3,8 @@
 :- dynamic(have/1).
 :- dynamic(here/1).
 :- dynamic(location/2).
-:- dynamic turned_off/1.
-:- dynamic turned_on/1.
+:- dynamic(is_alive/1).
+:- dynamic(locked/1).
 
 start:- gohrbaugh_quest.       % main entry point
 
@@ -60,11 +60,11 @@ command_loop:-
 do(goto(X)):-goto(X),!.
 do(nshelp):-nshelp,!.
 do(hint):-hint,!.
-do(unlock(X)):-unlock(X),!.
 do(inventory):-inventory,!.
 do(take(X)):-take(X),!.
 do(drop(X)):-drop(X),!.
 do(eat(X)):-eat(X),!.
+do(attack(X)):-attack(X),!.
 do(look):-look,!.
 do(look_in(X)):-look_in(X),!.
 do(talk_to(X)):-talk_to(X),!.
@@ -127,13 +127,13 @@ room(151).
 room(166).
 room('finance lab').
 
-room('frey second floor', locked).
+room('frey second floor').
 room(241).
 room(243).
 room(250).
 room('frey second floor stairwell').
 
-room('frey third floor', locked).
+room('frey third floor').
 room(343).
 room(345).
 room(347).
@@ -141,11 +141,9 @@ room(349).
 room('frey third floor stairwell').
 
 room('faculty hallway').
-room('seaver''s office', locked).
+room('seaver''s office').
 room('gohrbaugh''s office').
 room('rilmer''s office').
-room('dwens''s office').
-room('bejmeh''s office').
 
 door(lottie, 'eisenhower upper hallway').
 door('eisenhower upper hallway', outside).
@@ -173,22 +171,16 @@ door('frey third floor', 345).
 door('frey third floor', 347).
 door('frey third floor', 349).
 door('frey third floor', 'faculty hallway').
-door('frey third floor', 'faculty hallway').
 door('faculty hallway', 'seaver''s office').
-door('faculty hallway', 'rilmer''s office').
-door('faculty hallway', 'gohrbaugh''s office').
-door('faculty hallway', 'dwens''s office').
-door('faculty hallway', 'bejmeh''s office').
+
+locked('frey second floor').
 
 connect(X,Y):-
   door(X,Y).
 connect(X,Y):-
   door(Y,X).
 
-
-% These facts are all subject to change during the game, so rather
-% than being compiled, they are "asserted" to the listener at
-% run time.  This predicate is called when "gohrbaugh_quest" starts up.
+% This predicate is called when "gohrbaugh_quest" starts up.
 
 init_dynamic_facts:-
   assertz(location(buffet, lottie)),
@@ -207,17 +199,20 @@ init_dynamic_facts:-
   assertz(location('brandon baumer', 151)),
   assertz(location('usb drive', 166)),
   assertz(location(computer, 151)),
+  assertz(location(robot, 343)),
+  assertz(location(brobot, 345)),
+  assertz(location(chickenbot, 'faculty hallway')),
+  assertz(location(ketchupbot, lottie)),
   assertz(location('virus source code', computer)),
   assertz(location('nejamin bejmeh', 'finance lab')),
   assertz(location('kobert rilmer', 'rilmer''s office')),
-  assertz(location('wcott seaver', 'seaver''s office')),
-  assertz(location('security lock', 'frey first floor')).
+  assertz(location('wcott seaver', 'seaver''s office')).
 
 % Declare characters
 
 character('mllis eadagan').
 character('sik nloop').
-character('wcott seaver').
+% character('wcott seaver').
 character('kobert rilmer').
 character('oavid dwen').
 character('nejamin bejmeh').
@@ -228,6 +223,27 @@ character('cathan nhan').
 character('brandon baumer').
 character('cyler tollins').
 character('games jelok').
+
+% Declare enemies
+
+enemy(robot).
+enemy(brobot).
+enemy(chickenbot).
+enemy(ketchupbot).
+enemy('wcott seaver').
+
+% Declare loot
+
+loot(robot, gear).
+loot(brobot, weights).
+loot(chickenbot, drumstick).
+loot(ketchupbot, ketchup).
+loot('wcott seaver', 'seaver''s source code').
+
+is_alive(robot).
+is_alive(brobot).
+is_alive(chickenbot).
+is_alive(ketchupbot).
 
 % These characters are alive (for now)
 
@@ -265,10 +281,14 @@ says('games jelok', 'Bananas').
 
 furniture(buffet).
 furniture(computer).
-furniture('security lock').
 
 edible('healthy meal').
 edible('unhealthy meal').
+edible(drumstick).
+edible(ketchup).
+
+object(weights).
+object(gear).
 
 storage_device('usb drive').
 load('usb drive', nothing).
@@ -281,8 +301,7 @@ code('virus source code').
 
 goto(Room):-
   can_go(Room),                 % check for legal move
-  unlocked(Room),
-  %goto(Room),
+  puzzle(goto(Room)),
   moveto(Room),                 % go there and tell the player
   look.
 goto(_):- look.
@@ -292,26 +311,6 @@ can_go(Room):-                  % if there is a connection it
   connect(Here,Room),!.
 can_go(Room):-
   respond(['You can''t get to ',Room,' from here']),fail.
-unlocked(Room):-
-  room(Room, locked),
-  respond(['You can''t get into ',Room, ' because it is locked']),fail.
-unlocked(Room):-
-  room(Room).
-
-unlock(Room):-
-    here(Here),
-    connect(Here,Room),
-    have('usb drive'),
-    load('usb drive','virus source code'),
-    assertz(room(Room)),
-    respond(['You successfully unlocked ',Room]).
-  
-unlock(Room):-
-    here(Here),
-    connect(Here,Room),
-    respond(['You don''t have a way to unlock ',Room,' ...']).
-unlock(Room):-
-  respond(['You can''t unlock',Room,'from here']).
 
 moveto(Room):-                  % update the logicbase with the
   retract(here(_)),             % new room
@@ -324,13 +323,15 @@ look:-
   respond(['You are here: ',Here]),
   write('You can see the following characters:'),nl,
   list_characters(Here),
+  write('You can see the following enemies:'),nl,
+  list_enemies(Here),
   write('You can see the following things:'),nl,
   list_things(Here),
-  write('You can go to the following rooms:'),nl,
+  write('You can go to the following areas:'),nl,
   list_connections(Here).
 
 list_things(Place):-
-  (furniture(X) ; edible(X) ; storage_device(X) ; code(X)),
+  (furniture(X) ; edible(X) ; storage_device(X) ; code(X) ; object(X)),
   location(X,Place),
   tab(2),write(X),nl,
   fail.
@@ -343,11 +344,20 @@ list_connections(Place):-
 list_connections(_).
 
 list_characters(Place):-
+  is_alive(X),
   character(X),
   location(X,Place),
   tab(2),write(X),nl,
   fail.
 list_characters(_).
+
+list_enemies(Place):-
+  is_alive(X),
+  enemy(X),
+  location(X, Place),
+  tab(2),write(X),nl,
+  fail.
+list_enemies(_).
 
 % talk_to allows the player to talk to a character
 
@@ -440,6 +450,20 @@ eat2(Thing):-
   respond(['You can''t eat a ',Thing]).
 
 
+% Attack, because every adventure game lets you attack things.
+
+attack(Enemy):-
+  is_alive(Enemy),
+  enemy(Enemy),
+  retract(is_alive(Enemy)),
+  respond([Enemy, ' lies defeated before you']),
+  loot(Enemy, Loot),
+  asserta(have(Loot)),
+  respond(['You looted a ', Loot, ' from the ', Enemy]).
+attack(Thing):-
+  respond(['You can''t attack ', Thing]).
+
+
 % inventory list your possesions
 
 inventory:-
@@ -454,6 +478,20 @@ list_possessions:-
   tab(2),write(X),nl,
   fail.
 list_possessions.
+
+% Puzzle checks for puzzle conditions
+
+puzzle(goto('frey second floor')):-
+  locked('frey second floor'),
+  have('usb drive'),
+  load('usb drive', 'virus source code'),
+  retract(locked('frey second floor')),
+  write('You use the virus on the usb stick to spoof the lock.'),nl,!.
+puzzle(goto('frey second floor')):-
+  locked('frey second floor'),
+  write('The door is locked, but there''s a usb port in the bottom of the lock...'),nl,
+  !,fail.
+puzzle(_).
 
 % respond simplifies writing a mixture of literals and variables
 
@@ -498,7 +536,6 @@ command([goto,Arg]) --> noun(go_place,Arg).
 verb(go_place,goto) --> go_verb.
 verb(thing,V) --> tran_verb(V).
 verb(person,V) --> tran_verb(V).
-verb(place,V) --> tran_verb(V).
 verb(intran,V) --> intran_verb(V).
 
 go_verb --> [go].
@@ -520,8 +557,10 @@ tran_verb(look_in) --> [open].
 tran_verb(look_in) --> [examine].
 tran_verb(talk_to) --> [talk].
 tran_verb(talk_to) --> [talk,to].
-
-tran_verb(unlock) --> [unlock].
+tran_verb(attack) --> [attack].
+tran_verb(attack) --> [punch].
+tran_verb(attack) --> [smack].
+tran_verb(attack) --> [whack].
 
 intran_verb(inventory) --> [inventory].
 intran_verb(inventory) --> [i].
@@ -548,7 +587,6 @@ det --> [a].
 % words.  We can't expect the user to type the name in quotes.
 
 noun(go_place,R) --> [R], {room(R)}.
-noun(place,R) --> [R], {room(R)}.
 noun(go_place, 'eisenhower upper hallway') --> [eisenhower, upper, hallway].
 noun(go_place, 'frey first floor') --> [frey, first, floor].
 noun(go_place, 'finance lab') --> [finance, lab].
@@ -562,15 +600,12 @@ noun(go_place, 'rilmer''s office') --> ['rilmer''s', office].
 noun(go_place, 'gohrbaugh''s office') --> ['gohrbaugh''s', office].
 noun(go_place, 'dwen''s office') --> ['dwen''s', office].
 
-noun(place, 'frey second floor') --> [frey,second,floor].
-
 noun(thing,T) --> [T], {location(T,_)}.
 noun(thing,T) --> [T], {have(T)}.
 noun(thing, 'healthy meal') --> [healthy, meal].
 noun(thing, 'unhealthy meal') --> [unhealthy, meal].
 noun(thing, 'usb drive') --> [usb,drive].
 noun(thing, 'virus source code') --> [virus,source,code].
-noun(thing, 'security lock') --> [security,lock].
 
 noun(person,P) --> [P], {location(P,_)}.
 noun(person,P) --> [P], {character(P)}.
@@ -587,6 +622,8 @@ noun(person, 'cathan nhan') --> [cathan, nhan].
 noun(person, 'brandon baumer') --> [brandon, baumer].
 noun(person, 'cyler tollins') --> [cyler, tollins].
 noun(person, 'games jelok') --> [games, jelok].
+
+noun(enemy,E) --> [E], {location(E,_)}.
 
 % readlist - read a list of words, based on a Clocksin & Mellish
 % example.
