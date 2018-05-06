@@ -67,8 +67,10 @@ do(eat(X)):-eat(X),!.
 do(attack(X)):-attack(X),!.
 do(look):-look,!.
 do(look_in(X)):-look_in(X),!.
+do(look_at(X)):-look_at(X),!.
 do(talk_to(X)):-talk_to(X),!.
 do(quit):-quit,!.
+do(password(X)):-password(X),!.
 
 % These are the predicates which control exit from the game.  If
 % the player has taken the nani, then the call to "have(nani)" will
@@ -202,6 +204,7 @@ door('faculty hallway', 'rilmer''s office').
 door('faculty hallway', 'gohrbaugh''s office').
 
 locked('frey second floor').
+locked('frey third floor').
 
 connect(X,Y):-
   door(X,Y).
@@ -227,6 +230,10 @@ init_dynamic_facts:-
   assertz(location('brandon baumer', 151)),
   assertz(location('usb drive', 166)),
   assertz(location(computer, 151)),
+  assertz(location('uv flashlight', 241)),
+  assertz(location(battery, 250)),
+  assertz(location('dry erase spray', 110)),
+  assertz(location(padlock,'frey second floor stairwell')),
   assertz(location(robot, 343)),
   assertz(location(brobot, 345)),
   assertz(location(chickenbot, 'faculty hallway')),
@@ -311,6 +318,7 @@ says('games jelok', 'Hello World').
 
 furniture(buffet).
 furniture(computer).
+furniture(padlock).
 
 edible('healthy meal').
 edible('unhealthy meal').
@@ -319,11 +327,39 @@ edible(ketchup).
 
 object(weights).
 object(gear).
+object('uv flashlight').
+object(battery).
+object('dry erase spray').
 
 storage_device('usb drive').
 load('usb drive', nothing).
 code('virus source code').
 
+accesscodes(1479).
+accesscodes(4179).
+accesscodes(7149).
+accesscodes(1749).
+accesscodes(4719).
+accesscodes(7419).
+accesscodes(9417).
+accesscodes(4917).
+accesscodes(1947).
+accesscodes(9147).
+accesscodes(4197).
+accesscodes(1497).
+accesscodes(1794).
+accesscodes(9174).
+accesscodes(1974).
+accesscodes(7914).
+accesscodes(9714).
+accesscodes(9741).
+accesscodes(7941).
+accesscodes(4971).
+accesscodes(9471).
+accesscodes(7491).
+accesscodes(4791).
+
+correct(7194).
 
 %%%%%%%% COMMANDS %%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -402,6 +438,41 @@ talk_to(Character):-
   respond([Character, ' isn''t in this area']),
   fail.
 
+% look_at allows you look at the outside of an object
+
+
+look_at(Thing):-
+  have('uv flashlight'),
+  have(battery),
+  have('dry erase spray'),
+  respond(['You used the spray and uv flashlight to see finger prints on the ',Thing,' . You can see that the numbers 1, 4, 7 and 9 have been pressed.']).  
+
+look_at(Thing):-
+  respond(['The ', Thing, ' has numbers 0-9 on it with. There is a 4-digit code. The only way to open the door is guess the password.']).
+
+% password allows you to enter a password for the padlock. If entered correctly, it will unlock frey third floor
+
+password(Test):-
+  here(Here),
+  connect(Here,'frey third floor'),
+  can_guess(),
+  correct(Test),
+  retract(locked('frey third floor')),
+  respond([Test, ' worked!. You unlocked the third floor!']).
+password(Test):-
+  here(Here),
+  connect(Here,'frey third floor'),
+  respond(['The password(',Test,') was incorrect. Try again.']).
+password():-
+    respond(['There is no place to enter a password.']).
+can_guess():-
+    have('uv flashlight'),
+    have(battery),
+    have('dry erase spray').
+can_guess():-
+    respond(['You will never be able to check all possible combinations! You need to narrow it down somehow.']),!,fail.
+
+
 % look_in allows the player to look inside a thing which might
 % contain other things
 
@@ -420,7 +491,7 @@ look_in(Thing):-
 take(Thing):-
   is_here(Thing),
   is_takable(Thing),
-  (edible(Thing) ; storage_device(Thing)),
+  (edible(Thing) ; storage_device(Thing); object(Thing)),
   move(Thing,have),
   respond(['You now have the ',Thing]),!.
 take(Thing):-
@@ -433,7 +504,6 @@ take(Thing):-
   respond(['You need something to put the ', Thing, ' on.']).
 take(Thing):-
   respond(['There is no ', Thing, ' here']).
-
 is_here(Thing):-
   here(Here),
   contains(Thing,Here),!.          % don't backtrack
@@ -524,6 +594,11 @@ puzzle(goto('frey second floor')):-
   locked('frey second floor'),
   write('The door is locked, but there''s a usb port in the bottom of the lock...'),nl,
   !,fail.
+puzzle(goto('frey third floor')):-
+    locked('frey third floor'),
+    write('The door is locked. It appears you need to enter the correct password in the padlock.'),nl,!,fail.
+puzzle(goto('frey third floor')):-
+    write('You entered the right password and you were able to get though!'),nl,!.
 puzzle(attack('wcott seaver')):-
   not(is_alive(robot)),
   not(is_alive(brobot)),
@@ -533,9 +608,8 @@ puzzle(attack('wcott seaver')):-
 puzzle(attack('wcott seaver')):-
   write('Seaver''s shield prevents you from attacking. Maybe if you beat his robots...'),nl,
   !,fail.
-
-
 puzzle(_).
+
 
 % respond simplifies writing a mixture of literals and variables
 
@@ -580,6 +654,8 @@ command([goto,Arg]) --> noun(go_place,Arg).
 verb(go_place,goto) --> go_verb.
 verb(thing,V) --> tran_verb(V).
 verb(person,V) --> tran_verb(V).
+verb(accesscodes,V) --> tran_verb(V).
+verb(correct,V) --> tran_verb(V).
 verb(intran,V) --> intran_verb(V).
 
 go_verb --> [go].
@@ -599,12 +675,17 @@ tran_verb(look_in) --> [look,in].
 tran_verb(look_in) --> [look].
 tran_verb(look_in) --> [open].
 tran_verb(look_in) --> [examine].
+tran_verb(look_at) --> [look,at].
 tran_verb(talk_to) --> [talk].
 tran_verb(talk_to) --> [talk,to].
 tran_verb(attack) --> [attack].
 tran_verb(attack) --> [punch].
 tran_verb(attack) --> [smack].
 tran_verb(attack) --> [whack].
+tran_verb(password) --> [password].
+tran_verb(password) --> [enter].
+tran_verb(password) --> [enter,password].
+
 
 intran_verb(inventory) --> [inventory].
 intran_verb(inventory) --> [i].
@@ -617,6 +698,7 @@ intran_verb(quit) --> [end].
 intran_verb(quit) --> [bye].
 intran_verb(nshelp) --> [help].
 intran_verb(hint) --> [hint].
+
 
 % a noun phrase is just a noun with an optional determiner in front.
 
@@ -650,6 +732,8 @@ noun(thing, 'healthy meal') --> [healthy, meal].
 noun(thing, 'unhealthy meal') --> [unhealthy, meal].
 noun(thing, 'usb drive') --> [usb,drive].
 noun(thing, 'virus source code') --> [virus,source,code].
+noun(thing, 'uv flashlight') --> [uv,flashlight].
+noun(thing, 'dry erase spray') --> [dry,erase,spray].
 
 noun(person,P) --> [P], {location(P,_)}.
 noun(person,P) --> [P], {character(P)}.
@@ -668,6 +752,8 @@ noun(person, 'cyler tollins') --> [cyler, tollins].
 noun(person, 'games jelok') --> [games, jelok].
 
 noun(enemy,E) --> [E], {location(E,_)}.
+noun(accesscodes,A) --> [A], {accesscodes(A)}.
+noun(correct,C) --> [C], {correct(C)}.
 
 % readlist - read a list of words, based on a Clocksin & Mellish
 % example.
