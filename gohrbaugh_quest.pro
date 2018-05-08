@@ -455,12 +455,12 @@ look_at(Thing):-
 password(Test):-
   here(Here),
   connect(Here,'frey third floor'),
-  can_guess(),
   correct(Test),
   retract(locked('frey third floor')),
   respond([Test, ' worked!. You unlocked the third floor!']).
 password(Test):-
   here(Here),
+  can_guess(),
   connect(Here,'frey third floor'),
   respond(['The password(',Test,') was incorrect. Try again.']).
 password():-
